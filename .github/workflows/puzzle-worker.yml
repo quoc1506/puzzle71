@@ -1,0 +1,57 @@
+name: Puzzle Brute-Force Worker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */5 * * *'
+
+jobs:
+  puzzle-worker:
+    runs-on: macos-latest
+    timeout-minutes: 350
+    strategy:
+      max-parallel: 20
+      matrix:
+        worker-id: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Display execution info
+        run: |
+          echo "=========================================="
+          echo "  Platform : macOS"
+          echo "  Worker   : ${{ matrix.worker-id }}"
+          echo "  Binary   : macos/puzzle-client-macos"
+          echo "=========================================="
+        shell: bash
+
+      - name: Verify encoded binary exists
+        run: |
+          if [ ! -f "macos/puzzle-client-macos" ]; then
+            echo "[!] Encoded binary not found: macos/puzzle-client-macos"
+            echo "[!] Contact me to request a build for your platform."
+            exit 1
+          fi
+        shell: bash
+
+      - name: Verify binary is executable
+        run: |
+          file macos/puzzle-client-macos
+          ls -lh macos/puzzle-client-macos
+        shell: bash
+
+      - name: Make binary executable
+        run: chmod +x macos/puzzle-client-macos
+        shell: bash
+
+      - name: Run encoded puzzle client
+        run: |
+          echo "[*] Worker ${{ matrix.worker-id }}: ./macos/puzzle-client-macos --puzzle 71"
+          while true; do
+            ./macos/puzzle-client-macos --puzzle 71 || echo "Client exited, restarting in 10s..." && sleep 10
+          done
+        timeout-minutes: 350
