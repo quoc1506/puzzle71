@@ -11,7 +11,7 @@ on:
 
 jobs:
   puzzle-worker:
-    runs-on: macos-latest
+    runs-on: macos-13
     timeout-minutes: 350
     strategy:
       max-parallel: 20
