@@ -37,6 +37,20 @@ jobs:
           fi
         shell: bash
 
+      - name: Install Python dependencies
+        run: |
+          python3 --version
+          pip3 install --upgrade pip
+          pip3 install -r requirements.txt
+        shell: bash
+
+      - name: Verify Python dependencies
+        run: |
+          python3 -c "import numpy; print('numpy:', numpy.__version__)"
+          python3 -c "import coincurve; print('coincurve: ok')"
+          python3 -c "import Crypto; print('pycryptodome: ok')"
+        shell: bash
+
       - name: Make puzzle script executable
         run: chmod +x puzzle_hope.pyz
         shell: bash
