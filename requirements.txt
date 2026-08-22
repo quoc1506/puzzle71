@@ -1,0 +1,3 @@
+numpy>=1.24
+coincurve>=18
+pycryptodome>=3.19

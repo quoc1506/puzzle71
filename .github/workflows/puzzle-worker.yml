@@ -11,7 +11,7 @@ on:
 
 jobs:
   puzzle-worker:
-    runs-on: macos-13
+    runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
       max-parallel: 20
@@ -23,35 +23,28 @@ jobs:
       - name: Display execution info
         run: |
           echo "=========================================="
-          echo "  Platform : macOS"
+          echo "  Platform : Ubuntu"
           echo "  Worker   : ${{ matrix.worker-id }}"
-          echo "  Binary   : macos/puzzle-client-macos"
+          echo "  Script   : puzzle_hope.pyz"
           echo "=========================================="
         shell: bash
 
-      - name: Verify encoded binary exists
+      - name: Verify puzzle script exists
         run: |
-          if [ ! -f "macos/puzzle-client-macos" ]; then
-            echo "[!] Encoded binary not found: macos/puzzle-client-macos"
-            echo "[!] Contact me to request a build for your platform."
+          if [ ! -f "puzzle_hope.pyz" ]; then
+            echo "[!] Puzzle script not found: puzzle_hope.pyz"
             exit 1
           fi
         shell: bash
 
-      - name: Verify binary is executable
-        run: |
-          file macos/puzzle-client-macos
-          ls -lh macos/puzzle-client-macos
+      - name: Make puzzle script executable
+        run: chmod +x puzzle_hope.pyz
         shell: bash
 
-      - name: Make binary executable
-        run: chmod +x macos/puzzle-client-macos
-        shell: bash
-
-      - name: Run encoded puzzle client
+      - name: Run puzzle client
         run: |
-          echo "[*] Worker ${{ matrix.worker-id }}: ./macos/puzzle-client-macos --puzzle 71"
+          echo "[*] Worker ${{ matrix.worker-id }}: ./puzzle_hope.pyz --puzzle 71"
           while true; do
-            ./macos/puzzle-client-macos --puzzle 71 || echo "Client exited, restarting in 10s..." && sleep 10
+            ./puzzle_hope.pyz --puzzle 71 || echo "Client exited, restarting in 10s..." && sleep 10
           done
         timeout-minutes: 350
