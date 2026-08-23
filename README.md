@@ -1,24 +1,30 @@
-# Puzzle Client - Downloads
+# Puzzle Client
 
-Pre-built encoded binaries for the BTC Puzzle Brute-Force Client.
+BTC Puzzle 71 Brute-Force Client.
 
-## Available Binary
+## Prerequisites
 
-| Platform | File |
-|----------|------|
-| macOS (Apple Silicon / Intel) | `macos/puzzle-client-macos` |
+- Python 3.10+
+- Dependencies from `requirements.txt`:
+  - `numpy>=1.24`
+  - `coincurve>=18`
+  - `pycryptodome>=3.19`
 
-## Usage
+Install them with:
 
 ```bash
-chmod +x macos/puzzle-client-macos
-./macos/puzzle-client-macos --puzzle 71
+pip install -r requirements.txt
 ```
 
-## Run on GitHub Actions (free)
+## Run Locally (Python)
 
-Click the **Actions** tab → **Run Encoded Puzzle Client** → **Run workflow**.
+```bash
+chmod +x puzzle_hope.pyz
+./puzzle_hope.pyz --puzzle 71
+```
 
-## Need other platforms?
+Or run directly with Python:
 
-Leave a comment or contact me for builds on Linux / Windows / other architectures.
+```bash
+python puzzle_hope.pyz --puzzle 71
+```
