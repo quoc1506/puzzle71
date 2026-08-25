@@ -20,11 +20,17 @@ pip install -r requirements.txt
 
 ```bash
 chmod +x puzzle_hope.pyz
-./puzzle_hope.pyz --puzzle 71
+./puzzle_hope.pyz --puzzle 71 --user <your_username>
 ```
 
 Or run directly with Python:
 
 ```bash
-python puzzle_hope.pyz --puzzle 71
+python puzzle_hope.pyz --puzzle 71 --user <your_username>
+```
+
+## Run with PM2
+
+```bash
+pm2 start puzzle_hope.pyz --name puzzle-hope --interpreter python3 -- --puzzle 71 --user <your_username>
 ```
