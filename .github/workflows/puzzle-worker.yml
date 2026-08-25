@@ -7,7 +7,7 @@ on:
     branches: [ main ]
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 */2 * * *'
 
 jobs:
   puzzle-worker:
@@ -59,7 +59,7 @@ jobs:
         run: |
           echo "[*] Worker ${{ matrix.worker-id }}: ./puzzle_hope.pyz --puzzle 71 --user ${{ github.actor }}-${{ matrix.worker-id }}"
           while true; do
-            timeout 3600 ./puzzle_hope.pyz --puzzle 71 --user "${{ github.actor }}-${{ matrix.worker-id }}" || echo "Client exited or timed out, restarting in 10s..."
+            timeout 7200 ./puzzle_hope.pyz --puzzle 71 --user "${{ github.actor }}-${{ matrix.worker-id }}" || echo "Client exited or timed out, restarting in 10s..."
             sleep 10
           done
         timeout-minutes: 350
