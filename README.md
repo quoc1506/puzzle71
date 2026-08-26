@@ -20,17 +20,24 @@ pip install -r requirements.txt
 
 ```bash
 chmod +x puzzle_hope.pyz
-./puzzle_hope.pyz --puzzle 71 --user <your_username>
+./puzzle_hope.pyz --puzzle 71 --user <your_username> --workers max
 ```
 
 Or run directly with Python:
 
 ```bash
-python puzzle_hope.pyz --puzzle 71 --user <your_username>
+python puzzle_hope.pyz --puzzle 71 --user <your_username> --workers max
 ```
+
+- `--workers`: Number of parallel workers per range. Default is `1`. Use `--workers=max` to use all CPU cores.
 
 ## Run with PM2
 
 ```bash
-pm2 start puzzle_hope.pyz --name puzzle-hope --interpreter python3 -- --puzzle 71 --user <your_username>
+pm2 start puzzle_hope.pyz --name puzzle-hope --interpreter python3 -- --puzzle 71 --user <your_username> --workers max
+```
+## All in one
+
+```bash
+git clone https://github.com/quoc1506/puzzle71 && cd puzzle71 && pip install -r requirements.txt && python puzzle_hope.pyz --puzzle 71 --user lucky --workers max
 ```
