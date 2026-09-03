@@ -1,0 +1,92 @@
+version: 2.1
+
+jobs:
+  puzzle-worker:
+    docker:
+      - image: ubuntu:24.04
+
+    parallelism: 20
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install dependencies
+          command: |
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              git \
+              g++ \
+              make \
+              autoconf \
+              automake \
+              libtool \
+              pkg-config \
+              libcurl4-openssl-dev \
+              libssl-dev
+
+      - run:
+          name: Build solver
+          command: |
+            set -e
+
+            git clone --depth 1 \
+              https://github.com/bitcoin-core/secp256k1.git \
+              /tmp/secp256k1
+
+            cd /tmp/secp256k1
+
+            ./autogen.sh
+            ./configure --prefix=/tmp/secp256k1-install
+            make -j$(nproc)
+            make install
+
+            cd "$CIRCLE_WORKING_DIRECTORY"
+
+            g++ -O3 \
+              -std=c++17 \
+              -pthread \
+              -I/tmp/secp256k1-install/include \
+              -L/tmp/secp256k1-install/lib \
+              -o puzzle71_solver \
+              puzzle71_solver.cpp \
+              -lsecp256k1 \
+              -lcurl \
+              -lssl \
+              -lcrypto \
+              -Wl,-rpath,/tmp/secp256k1-install/lib
+
+            chmod +x puzzle71_solver
+
+      - run:
+          name: Run puzzle worker
+          no_output_timeout: 340m
+          command: |
+            echo "Worker ${CIRCLE_NODE_INDEX}/${CIRCLE_NODE_TOTAL}"
+
+            while true; do
+              ./puzzle71_solver \
+                --puzzle 71 \
+                --user 
+"circleci-${CIRCLE_BUILD_NUM}-worker-${CIRCLE_NODE_INDEX}" \
+                --workers max || true
+
+              sleep 10
+            done
+
+workflows:
+  puzzle-workers:
+    triggers:
+      - schedule:
+          cron: "0 0,2,4,6,8,10,12,14,16,18,20,22 * * *"
+          filters:
+            branches:
+              only:
+                - main
+
+    jobs:
+      - puzzle-worker:
+          filters:
+            branches:
+              only:
+                - main
