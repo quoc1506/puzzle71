@@ -23,12 +23,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Display execution info
+      - name: Install C++ dependencies
         run: |
-          echo "=========================================="
-          echo "  Platform : Ubuntu"
-          echo "  Worker   : ${{ matrix.worker-id }}"
-          echo "=========================================="
+          sudo apt-get update
+          sudo apt-get install -y \
+            g++ \
+            make \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            libcurl4-openssl-dev \
+            libssl-dev
 
       - name: Build libsecp256k1 and puzzle71_solver
         run: |
