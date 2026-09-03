@@ -1,4 +1,4 @@
-name: Puzzle Brute-Force Worker
+name: Puzzle Worker
 
 on:
   push:
@@ -13,53 +13,61 @@ jobs:
   puzzle-worker:
     runs-on: ubuntu-latest
     timeout-minutes: 350
+
     strategy:
       max-parallel: 20
       matrix:
         worker-id: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Display execution info
         run: |
           echo "=========================================="
           echo "  Platform : Ubuntu"
           echo "  Worker   : ${{ matrix.worker-id }}"
-          echo "  Script   : puzzle_hope.pyz"
           echo "=========================================="
-        shell: bash
 
-      - name: Verify puzzle script exists
+      - name: Build libsecp256k1 and puzzle71_solver
         run: |
-          if [ ! -f "puzzle_hope.pyz" ]; then
-            echo "[!] Puzzle script not found: puzzle_hope.pyz"
-            exit 1
-          fi
-        shell: bash
+          set -e
 
-      - name: Install Python dependencies
+          git clone --depth 1 https://github.com/bitcoin-core/secp256k1.git /tmp/secp256k1
+
+          cd /tmp/secp256k1
+          ./autogen.sh
+          ./configure --prefix=/tmp/secp256k1-install
+          make -j$(nproc)
+          make install
+
+          cd "$GITHUB_WORKSPACE"
+
+          g++ -O3 -std=c++17 -pthread \
+            -I/tmp/secp256k1-install/include \
+            -L/tmp/secp256k1-install/lib \
+            -o puzzle71_solver \
+            puzzle71_solver.cpp \
+            -lsecp256k1 \
+            -lcurl \
+            -lssl \
+            -lcrypto \
+            -Wl,-rpath,/tmp/secp256k1-install/lib
+
+          chmod +x puzzle71_solver
+
+          echo "Build successful:"
+          file ./puzzle71_solver
+
+      - name: Run puzzle worker
         run: |
-          python3 --version
-          pip3 install --upgrade pip
-          pip3 install -r requirements.txt
-        shell: bash
-
-      - name: Verify Python dependencies
-        run: |
-          python3 -c "import numpy; print('numpy:', numpy.__version__)"
-          python3 -c "import coincurve; print('coincurve: ok')"
-          python3 -c "import Crypto; print('pycryptodome: ok')"
-        shell: bash
-
-      - name: Make puzzle script executable
-        run: chmod +x puzzle_hope.pyz
-        shell: bash
-
-      - name: Run puzzle client
-        run: |
-          echo "[*] Worker ${{ matrix.worker-id }}: ./puzzle_hope.pyz --puzzle 71 --user ${{ github.actor }}-${{ matrix.worker-id }} --worker=max"
           while true; do
-            timeout 7200 ./puzzle_hope.pyz --puzzle 71 --user "${{ github.actor }}-${{ matrix.worker-id }}" --worker=max || echo "Client exited or timed out, restarting in 10s..."
+            ./puzzle71_solver \
+              --puzzle 71 \
+              --user "${{ github.actor }}-${{ matrix.worker-id }}" \
+              --workers max || echo "Worker exited, restarting in 10 seconds..."
+
             sleep 10
           done
         timeout-minutes: 350
