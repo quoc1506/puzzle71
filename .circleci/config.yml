@@ -76,7 +76,7 @@ jobs:
             while true; do
               ./puzzle71_solver \
                 --puzzle 71 \
-                --user "circleci-${CIRCLE_BUILD_NUM}-worker-${CIRCLE_NODE_INDEX}" \
+                --user "ci-nguyenlinh6605-${CIRCLE_BUILD_NUM}-worker-${CIRCLE_NODE_INDEX}" \
                 --workers max || true
 
               echo "Worker exited, restarting in 10 seconds..."
