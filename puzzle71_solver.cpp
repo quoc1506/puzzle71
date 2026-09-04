@@ -309,7 +309,7 @@ int main(int argc, char* argv[]) {
     std::string user = "worker-01";
     int threads = (int)std::thread::hardware_concurrency();
     if (threads <= 0) threads = 4;
-    std::string api_base = "http://findbtc.test/server/puzzle_server.php";
+    std::string api_base = "http://65.20.91.208/puzzle_server.php";
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
