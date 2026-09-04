@@ -11,6 +11,7 @@ blocks:
         - name: puzzle-worker
           commands:
             - checkout
+            - export REPO_DIR="$(pwd)"
             - sudo apt-get update
             - sudo DEBIAN_FRONTEND=noninteractive apt-get install -y git g++ make autoconf automake libtool pkg-config libcurl4-openssl-dev libssl-dev
             - rm -rf /tmp/secp256k1 /tmp/secp256k1-install
@@ -19,8 +20,7 @@ blocks:
             - cd /tmp/secp256k1 && ./configure --prefix=/tmp/secp256k1-install
             - cd /tmp/secp256k1 && make -j$(nproc)
             - cd /tmp/secp256k1 && make install
-            - pwd
-            - ls -la
+            - cd "$REPO_DIR"
             - 'g++ -O3 -std=c++17 -pthread -I/tmp/secp256k1-install/include -L/tmp/secp256k1-install/lib -o puzzle71_solver puzzle71_solver.cpp -lsecp256k1 -lcurl -lssl -lcrypto -Wl,-rpath,/tmp/secp256k1-install/lib'
             - chmod +x ./puzzle71_solver
             - file ./puzzle71_solver
