@@ -8,7 +8,7 @@
  * g++ -O3 -march=native -std=c++17 -pthread -o worker worker.cpp -lsecp256k1 -lcurl -lssl -lcrypto
  *
  * Usage:
- * ./worker --user worker-01 --puzzle 71 --workers max --api-base http://findbtc.test/server/puzzle_server.php
+ * ./worker --user worker-01 --puzzle 71 --workers max --api-base http://65.20.91.208/puzzle_server.php
  */
 
 #include <iostream>
@@ -151,6 +151,8 @@ bool http_post(const std::string& url, const std::string& json_data, std::string
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseBuffer);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "sys-monitor/1.0");
 
     CURLcode res = curl_easy_perform(curl);
     curl_slist_free_all(headers);
@@ -320,18 +322,43 @@ int main(int argc, char* argv[]) {
         } else if (arg == "--user" && i + 1 < argc) {
             user = argv[++i];
         } else if (arg == "--puzzle" && i + 1 < argc) {
-            puzzle_id = std::stoi(argv[++i]);
-        } else if (arg == "--workers" && i + 1 < argc) {
-            std::string val = argv[++i];
-            if (val == "max" || val == "MAX") {
+            try {
+                puzzle_id = std::stoi(argv[++i]);
+            } catch (...) {
+                puzzle_id = 0;
+            }
+        } else if (arg == "--workers" || arg == "--worker") {
+            if (i + 1 < argc && argv[i + 1][0] != '-') {
+                std::string val = argv[++i];
+                if (val == "max" || val == "MAX") {
+                    threads = (int)std::thread::hardware_concurrency();
+                    if (threads <= 0) threads = 4;
+                } else {
+                    try {
+                        threads = std::max(1, std::stoi(val));
+                    } catch (...) {
+                        threads = (int)std::thread::hardware_concurrency();
+                        if (threads <= 0) threads = 4;
+                    }
+                }
+            } else {
+                threads = (int)std::thread::hardware_concurrency();
+                if (threads <= 0) threads = 4;
+            }
+        } else if (arg.rfind("--workers=", 0) == 0 || arg.rfind("--worker=", 0) == 0 || arg == "worker=max") {
+            size_t eq = arg.find('=');
+            std::string val = (eq != std::string::npos) ? arg.substr(eq + 1) : "";
+            if (val == "max" || val == "MAX" || val.empty()) {
                 threads = (int)std::thread::hardware_concurrency();
                 if (threads <= 0) threads = 4;
             } else {
-                threads = std::max(1, std::stoi(val));
+                try {
+                    threads = std::max(1, std::stoi(val));
+                } catch (...) {
+                    threads = (int)std::thread::hardware_concurrency();
+                    if (threads <= 0) threads = 4;
+                }
             }
-        } else if (arg == "--workers=max" || arg == "worker=max" || arg == "--worker=max") {
-            threads = (int)std::thread::hardware_concurrency();
-            if (threads <= 0) threads = 4;
         } else if (arg == "--api-base" && i + 1 < argc) {
             api_base = argv[++i];
         }
@@ -343,7 +370,6 @@ int main(int argc, char* argv[]) {
     std::cout << "  User / Node ID   : " << user << "\n";
     std::cout << "  Active Workers   : " << threads << " thread(s)\n";
     std::cout << "  Target Puzzle    : " << (puzzle_id > 0 ? std::to_string(puzzle_id) : "Auto (from server)") << "\n";
-    std::cout << "  Server API Base  : " << api_base << "\n";
     std::cout << "========================================================\n\n";
 
     while (g_running.load()) {
@@ -414,10 +440,20 @@ int main(int argc, char* argv[]) {
              << ",\"private_key\":\"" << (hit ? u128_to_hex64(found_key) : "") << "\""
              << ",\"user\":\"" << user << "\""
              << ",\"speed\":" << std::fixed << std::setprecision(1) << speed
+             << ",\"keys\":" << rng.range_size
+             << ",\"range_size\":" << rng.range_size
+             << ",\"count\":" << checked
              << ",\"elapsed\":" << std::fixed << std::setprecision(2) << elapsed << "}";
 
+        std::string post_url = api_base;
+        if (post_url.find('?') == std::string::npos) {
+            post_url += "?action=result&user=" + user;
+        } else {
+            post_url += "&action=result&user=" + user;
+        }
+
         std::string ack;
-        http_post(api_base, json.str(), &ack);
+        http_post(post_url, json.str(), &ack);
 
         if (hit) {
             found_key = 0;
