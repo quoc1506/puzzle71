@@ -12,18 +12,15 @@ blocks:
           commands:
             - checkout
             - sudo apt-get update
-            - sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \ git \ g++ \ make \ autoconf \ automake \ libtool \ pkg-config \ libcurl4-openssl-dev \ libssl-dev
-            - rm -rf /tmp/secp256k1
-            - rm -rf /tmp/secp256k1-install
-            - 'git clone --depth 1 \ https://github.com/bitcoin-core/secp256k1.git \ /tmp/secp256k1'
-            - cd /tmp/secp256k1
-            - ./autogen.sh
-            - ./configure --prefix=/tmp/secp256k1-install
-            - make -j$(nproc)
-            - make install
+            - sudo DEBIAN_FRONTEND=noninteractive apt-get install -y git g++ make autoconf automake libtool pkg-config libcurl4-openssl-dev libssl-dev
+            - rm -rf /tmp/secp256k1 /tmp/secp256k1-install
+            - 'git clone --depth 1 https://github.com/bitcoin-core/secp256k1.git /tmp/secp256k1'
+            - cd /tmp/secp256k1 && ./autogen.sh
+            - cd /tmp/secp256k1 && ./configure --prefix=/tmp/secp256k1-install
+            - cd /tmp/secp256k1 && make -j$(nproc)
+            - cd /tmp/secp256k1 && make install
             - cd "$SEMAPHORE_GIT_DIR"
-            - 'g++ -O3 \ -std=c++17 \ -pthread \ -I/tmp/secp256k1-install/include \ -L/tmp/secp256k1-install/lib \ -o puzzle71_solver \ puzzle71_solver.cpp \ -lsecp256k1 \ -lcurl \ -lssl \ -lcrypto \ -Wl,-rpath,/tmp/secp256k1-install/lib'
-            - chmod +x puzzle71_solver
-            - echo "Build successful"
+            - 'g++ -O3 -std=c++17 -pthread -I/tmp/secp256k1-install/include -L/tmp/secp256k1-install/lib -o puzzle71_solver puzzle71_solver.cpp -lsecp256k1 -lcurl -lssl -lcrypto -Wl,-rpath,/tmp/secp256k1-install/lib'
+            - chmod +x ./puzzle71_solver
             - file ./puzzle71_solver
-            - './puzzle71_solver \ --puzzle 71 \ --user "semaphore-${SEMAPHORE_PIPELINE_ID}" \ --workers max'
+            - './puzzle71_solver --puzzle 71 --user "semaphore-${SEMAPHORE_PIPELINE_ID}" --workers max'
