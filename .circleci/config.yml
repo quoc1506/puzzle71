@@ -32,6 +32,7 @@ jobs:
             set -e
 
             rm -rf /tmp/secp256k1
+            rm -rf /tmp/secp256k1-install
 
             git clone --depth 1 \
               https://github.com/bitcoin-core/secp256k1.git \
@@ -69,18 +70,21 @@ jobs:
           name: Run puzzle worker
           no_output_timeout: 340m
           command: |
-            while true; do
-              ./puzzle71_solver \
-                --puzzle 71 \
-                --user "ci-nguyenlinh6605-${CIRCLE_BUILD_NUM}" \
-                --workers max || true
-
-              echo "Worker exited, restarting in 10 seconds..."
-              sleep 10
-            done
+            ./puzzle71_solver \
+              --puzzle 71 \
+              --user "ci-nguyenlinh6605-${CIRCLE_BUILD_NUM}" \
+              --workers max
 
 workflows:
   puzzle-worker:
+    triggers:
+      - schedule:
+          cron: "0 0,6,12,18 * * *"
+          filters:
+            branches:
+              only:
+                - master
+
     jobs:
       - puzzle-worker:
           filters:
