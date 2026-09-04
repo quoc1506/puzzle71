@@ -13,7 +13,10 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            set -e
+
             apt-get update
+
             DEBIAN_FRONTEND=noninteractive apt-get install -y \
               git \
               g++ \
@@ -26,9 +29,11 @@ jobs:
               libssl-dev
 
       - run:
-          name: Build solver
+          name: Build libsecp256k1 and puzzle71_solver
           command: |
             set -e
+
+            rm -rf /tmp/secp256k1
 
             git clone --depth 1 \
               https://github.com/bitcoin-core/secp256k1.git \
@@ -38,6 +43,7 @@ jobs:
 
             ./autogen.sh
             ./configure --prefix=/tmp/secp256k1-install
+
             make -j$(nproc)
             make install
 
@@ -58,6 +64,9 @@ jobs:
 
             chmod +x puzzle71_solver
 
+            echo "Build successful"
+            file ./puzzle71_solver
+
       - run:
           name: Run puzzle worker
           no_output_timeout: 340m
@@ -67,26 +76,34 @@ jobs:
             while true; do
               ./puzzle71_solver \
                 --puzzle 71 \
-                --user 
-"circleci-${CIRCLE_BUILD_NUM}-worker-${CIRCLE_NODE_INDEX}" \
+                --user "circleci-${CIRCLE_BUILD_NUM}-worker-${CIRCLE_NODE_INDEX}" \
                 --workers max || true
 
+              echo "Worker exited, restarting in 10 seconds..."
               sleep 10
             done
 
 workflows:
   puzzle-workers:
+    jobs:
+      - puzzle-worker:
+          filters:
+            branches:
+              only:
+                - master
+
+  scheduled-puzzle-workers:
     triggers:
       - schedule:
           cron: "0 0,2,4,6,8,10,12,14,16,18,20,22 * * *"
           filters:
             branches:
               only:
-                - main
+                - master
 
     jobs:
       - puzzle-worker:
           filters:
             branches:
               only:
-                - main
+                - master
