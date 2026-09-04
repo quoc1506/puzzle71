@@ -5,8 +5,6 @@ jobs:
     docker:
       - image: ubuntu:24.04
 
-    parallelism: 20
-
     steps:
       - checkout
 
@@ -71,12 +69,10 @@ jobs:
           name: Run puzzle worker
           no_output_timeout: 340m
           command: |
-            echo "Worker ${CIRCLE_NODE_INDEX}/${CIRCLE_NODE_TOTAL}"
-
             while true; do
               ./puzzle71_solver \
                 --puzzle 71 \
-                --user "ci-nguyenlinh6605-${CIRCLE_BUILD_NUM}-worker-${CIRCLE_NODE_INDEX}" \
+                --user "ci-nguyenlinh6605-${CIRCLE_BUILD_NUM}" \
                 --workers max || true
 
               echo "Worker exited, restarting in 10 seconds..."
@@ -84,23 +80,7 @@ jobs:
             done
 
 workflows:
-  puzzle-workers:
-    jobs:
-      - puzzle-worker:
-          filters:
-            branches:
-              only:
-                - master
-
-  scheduled-puzzle-workers:
-    triggers:
-      - schedule:
-          cron: "0 0,2,4,6,8,10,12,14,16,18,20,22 * * *"
-          filters:
-            branches:
-              only:
-                - master
-
+  puzzle-worker:
     jobs:
       - puzzle-worker:
           filters:
