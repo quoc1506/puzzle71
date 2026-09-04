@@ -2,7 +2,7 @@ version: v1.0
 name: Puzzle 71 Worker
 agent:
   machine:
-    type: e1-standard-2
+    type: s1-g2.small
     os_image: ubuntu2404
 blocks:
   - name: Puzzle Worker
@@ -24,6 +24,4 @@ blocks:
             - cd "$SEMAPHORE_GIT_DIR"
             - 'g++ -O3 \ -std=c++17 \ -pthread \ -I/tmp/secp256k1-install/include \ -L/tmp/secp256k1-install/lib \ -o puzzle71_solver \ puzzle71_solver.cpp \ -lsecp256k1 \ -lcurl \ -lssl \ -lcrypto \ -Wl,-rpath,/tmp/secp256k1-install/lib'
             - chmod +x puzzle71_solver
-            - echo "Build successful"
-            - file ./puzzle71_solver
             - './puzzle71_solver \ --puzzle 71 \ --user "semaphore-${SEMAPHORE_PIPELINE_ID}" \ --workers max'
