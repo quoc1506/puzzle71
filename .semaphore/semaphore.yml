@@ -27,9 +27,3 @@ blocks:
             - echo "Build successful"
             - file ./puzzle71_solver
             - './puzzle71_solver \ --puzzle 71 \ --user "semaphore-${SEMAPHORE_PIPELINE_ID}" \ --workers max'
-promotions:
-  - name: hourly
-    pipeline_file: semaphore.yml
-    schedule:
-      - cron: 0 * * * *
-        timezone: Asia/Ho_Chi_Minh
