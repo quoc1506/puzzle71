@@ -77,7 +77,7 @@ jobs:
             ./puzzle71_solver \
               --puzzle 71 \
               --user "ci-nguyenlinh6605-${CIRCLE_BUILD_NUM}" \
-              --workers max
+              --workers 1
 
 workflows:
   puzzle-worker:
