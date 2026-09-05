@@ -41,9 +41,11 @@ jobs:
             cd /tmp/secp256k1
 
             ./autogen.sh
-            ./configure --prefix=/tmp/secp256k1-install
 
-            make -j$(nproc)
+            ./configure \
+              --prefix=/tmp/secp256k1-install
+
+            make -j"$(nproc)"
             make install
 
             cd "$CIRCLE_WORKING_DIRECTORY"
@@ -70,6 +72,8 @@ jobs:
           name: Run puzzle worker
           no_output_timeout: 340m
           command: |
+            set -e
+
             ./puzzle71_solver \
               --puzzle 71 \
               --user "ci-nguyenlinh6605-${CIRCLE_BUILD_NUM}" \
@@ -77,14 +81,6 @@ jobs:
 
 workflows:
   puzzle-worker:
-    triggers:
-      - schedule:
-          cron: "0 0,6,12,18 * * *"
-          filters:
-            branches:
-              only:
-                - master
-
     jobs:
       - puzzle-worker:
           filters:
